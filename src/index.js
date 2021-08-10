@@ -3,8 +3,6 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import App from './App'
 
-<<<<<<< Updated upstream
-=======
 ReactDOM.render(<App />, document.getElementById('root'))
 
 /*
@@ -15,7 +13,6 @@ const persons = [
   { name: 'Mary Poppendieck', number: '39-23-6423122' }
 ]
 
->>>>>>> Stashed changes
 ReactDOM.render(
   <App />, 
   document.getElementById('root')
