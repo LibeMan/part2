@@ -1,14 +1,23 @@
-import React, { useState } from 'react'
-import Person from './components/Person'
+import React, { useState,useEffect } from 'react'
 import PersonAll from './components/PersonAll'
 import Form from './components/Form'
 import Filter from './components/Filter'
+import personService from './services/persons'
 
-const App = (props) => {
-  const [ persons, setPersons ] = useState(props.persons) 
+const App = () => {
+  const [ persons, setPersons ] = useState([]) 
   const [ newName, setNewName ] = useState('')
   const [ newNumber, setNewNumber ] = useState('')
   const [ showAll, setShowAll ] = useState('')
+
+
+  useEffect(() => {
+    personService
+      .getAll()
+      .then(initialPersons => {
+        setPersons(initialPersons)
+      })
+  }, [])
 
   const handleNameChange = (event) => {
     console.log(event.target.value)
@@ -24,25 +33,71 @@ const App = (props) => {
     setShowAll(event.target.value)
   }
 
-  
+  const deletePerson = (event) => {
+    const deleteP = persons.find(p => p.id === event.target.value)
+    if (window.confirm(`Do you want to delete ${event.target.name} ?`)) {
+      personService
+      .deletes(event.target.value)
+      .then(persons => {
+        setPersons(persons.filter(p => p.id !== event.target.value))
+        console.log(deleteP)
+      })
+      .catch(error => {
+       if (error.response) {
+         console.log(error.response.data)
+      } 
+      personService
+      .getAll()
+      .then(initialPersons => {
+        setPersons(initialPersons)
+      })
+      }) 
+    }
+  }
 
+  
   const addPerson = (event) => {
     event.preventDefault()
-    const personObject = {
+    console.log('person added', event.target)
+    const nameObject = {
       name: newName,
       number: newNumber
     }
-    persons.forEach(function(item){
-      if (newName === item.name || newNumber === item.number){
-        window.alert('Woopsidooo!! That name or number is already added to the phonebook')
+
+    if (persons.find(p => p.name === newName)) {
+      if (window.confirm(`${newName} is already added to Phonebook, do you want to update the existing contact?`)){
+        const personid = persons.find(p => p.name === newName)
+        console.log(personid)
+        personService
+        .update(personid.id, nameObject)
+        .then(returnedPerson => {
+          setPersons(persons.map(p=>p.id !== personid ? p: returnedPerson))
+          setNewName("")
+          setNewNumber("")
+        })
       } else {
-        setPersons(persons.concat(personObject))
+        setNewName("")
+        setNewNumber("")
+      }
+
+    } else {
+      personService
+      .create(nameObject)
+      .then(returnedPerson => {
+        setPersons(persons.concat(returnedPerson))
         setNewName('')
         setNewNumber('')
-      }
-    })
-    
+      })
+    }
+    personService
+      .getAll()
+      .then(initialPersons => {
+        setPersons(initialPersons)
+      })
   }
+  
+
+
 
   return (
     <div>
@@ -51,7 +106,7 @@ const App = (props) => {
       <Form newName={newName} newNumber={newNumber} handleNameChange={handleNameChange} handleNumberChange={handleNumberChange} addPerson={addPerson}/>
       <h2>Numbers</h2>
       <ul>
-        <PersonAll persons={persons} showAll={showAll}/>
+        <PersonAll persons={persons} showAll={showAll} deletePerson={deletePerson}/>
       </ul>
     </div>
   )
